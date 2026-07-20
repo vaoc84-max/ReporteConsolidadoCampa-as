@@ -15,7 +15,7 @@
   body{font-family:Calibri,Arial,sans-serif;margin:0;background:#fafafa;color:#222}
   header.app{background:#fff;border-bottom:4px solid var(--faces-rojo);padding:14px 20px;display:flex;align-items:center;gap:14px}
   .logo-img{height:46px}
-  #selZona{border:1px solid var(--faces-gris);border-radius:6px;padding:6px 10px;font-size:13px;color:var(--faces-gris-osc);background:#fff;font-weight:bold}
+  #selZona,#selOficina{border:1px solid var(--faces-gris);border-radius:6px;padding:6px 10px;font-size:13px;color:var(--faces-gris-osc);background:#fff;font-weight:bold}
   header.app .titles h1{margin:0;font-size:17px;color:var(--faces-gris-osc)}
   header.app .titles p{margin:3px 0 0;font-size:12.5px;color:#777}
   #drop{margin:20px;border:3px dashed #d99;border-radius:12px;padding:50px 20px;text-align:center;color:#865;font-size:17px;background:#fff;cursor:pointer;transition:background .2s}
@@ -68,6 +68,32 @@
   .cgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(460px,1fr));gap:12px;margin-top:10px}
   .ccard{border:1px solid #e1e6eb;border-radius:8px;padding:10px 12px;background:#fcfdfe;min-width:0}
   .ccard.wide{margin-top:12px}
+  .scrolly{max-height:340px;overflow-y:auto}
+  .dstack{display:flex;height:28px;border-radius:14px;overflow:hidden;margin:10px 0 6px;gap:3px}
+  .dseg{display:flex;align-items:center;justify-content:center;color:#fff;font-size:11.5px;font-weight:bold;min-width:0;border-radius:4px}
+  .dseg:first-child{border-radius:14px 4px 4px 14px}
+  .dseg:last-child{border-radius:4px 14px 14px 4px}
+  .dseg:only-child{border-radius:14px}
+  .dleyenda{font-size:11.5px;color:#666;margin:0 0 10px}
+  .dband{font-size:10.5px;font-weight:bold;letter-spacing:1.2px;text-transform:uppercase;margin:10px 0 2px;border-bottom:2px solid currentColor;padding-bottom:2px}
+  .dias-row{display:grid;grid-template-columns:14px minmax(150px,1.3fr) 95px 2fr 70px;gap:9px;align-items:center;padding:4px 0;border-bottom:1px solid #f1f1f1;font-size:12px}
+  .dias-row:last-child{border-bottom:none}
+  .sw{width:10px;height:10px;border-radius:3px;display:inline-block;vertical-align:-1px}
+  .dnom small{color:#888;display:block;font-size:10.5px}
+  .dnum{text-align:right;white-space:nowrap}
+  .dbar{background:#f1f1f1;border-radius:7px;height:12px;overflow:hidden}
+  .dfill{height:100%;border-radius:7px}
+  .dpct{text-align:center}
+  #calOverlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;z-index:50}
+  #calBox{background:#fff;border-radius:12px;padding:18px 22px;width:340px;box-shadow:0 10px 30px rgba(0,0,0,.3)}
+  #calBox h3{margin:0 0 6px;color:var(--faces-rojo);font-size:15px;text-transform:capitalize}
+  #calBox p{font-size:12px;color:#666;margin:4px 0 10px}
+  .calgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+  .calhdr{font-size:11px;font-weight:bold;color:var(--faces-gris);text-align:center}
+  .calday{border:1px solid #e0e0e0;border-radius:6px;text-align:center;padding:7px 0;font-size:12.5px;cursor:pointer;user-select:none}
+  .calday:hover{border-color:var(--faces-rojo)}
+  .calday.fer{background:var(--faces-rojo);color:#fff;border-color:var(--faces-rojo);font-weight:bold}
+  .calday.fut{color:#bbb}
   .ccard h3{margin:0 0 8px;font-size:13.5px;color:var(--faces-gris-osc)}
   .ccard p{font-size:12.5px;margin:6px 0}
   table.ctab{width:100%;min-width:0;font-size:11.5px;table-layout:auto}
@@ -122,13 +148,16 @@
   <button id="btnExpandWeeks">Detalle semanas</button>
   <button id="btnCollapseWeeks" class="sec">Solo subtotales</button>
   <button id="btnConc">Ver conclusiones</button>
+  <button id="btnFeriados" class="sec">Feriados</button>
   <button id="btnPrint" class="sec">Imprimir</button>
   <button id="btnOtro" class="sec">Cargar otro archivo</button>
   <select id="selZona" title="Filtrar por zona"></select>
+  <select id="selOficina" title="Filtrar por oficina"></select>
   <span class="meta" id="meta"></span>
 </div>
 <div id="conclusiones" style="display:none"></div>
 <div id="report"></div>
+<div id="calOverlay"><div id="calBox"></div></div>
 <p id="footerline"></p>
 <script>
 /*! xlsx.js (C) 2013-present SheetJS -- http://sheetjs.com */
@@ -199,6 +228,7 @@ var ICO = {
   down:  '<line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/>',
   copy:  '<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',
   dl:    '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>',
+  cal:   '<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>',
   share: '<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>'
 };
 function ico(n){ return '<span class="ico"><svg viewBox="0 0 24 24">'+ICO[n]+'</svg></span>'; }
@@ -230,7 +260,10 @@ function buildModel(rows){
   model.subtitulo= rows[2] ? rows[2][0] : "";
   for(var f=0; f<hdr; f++){
     var rr = rows[f]||[];
-    if(rr[0]==="FECHA CORTE:") model.fecha = serialToFecha(rr[1]);
+    if(rr[0]==="FECHA CORTE:"){
+      model.fecha = serialToFecha(rr[1]);
+      model.fechaDate = esNum(rr[1]) ? new Date(Math.round((rr[1]-25569)*86400*1000)) : null;
+    }
   }
 
   var gid = 0, enGrupo = false, lastZona = null, lastAgencia = null;
@@ -255,9 +288,9 @@ function buildModel(rows){
 
     var fila = {tipo:tipo, a:a, b:b, c:c, d:row[3], vals:row, grupo:(tipo==="detail"?gid:(tipo==="total-ag"?gid:null))};
     if(tipo==="detail"){ fila.zona=lastZona; fila.agencia=lastAgencia; }
-    if(tipo==="total-ag"){ fila.zona=lastZona; }
+    if(tipo==="total-ag"){ fila.zona=lastZona; fila.agencia = (typeof b==="string") ? b.replace(/^TOTAL\s+/,"") : null; }
     if(tipo==="total-zona" && typeof a==="string"){ fila.zona = a.replace(/^TOTAL\s+/,""); }
-    if(tipo==="pct"){ var prev = model.filas[model.filas.length-1]; fila.zona = prev ? prev.zona : null; }
+    if(tipo==="pct"){ var prev = model.filas[model.filas.length-1]; fila.zona = prev ? prev.zona : null; fila.agencia = prev ? prev.agencia : null; }
     model.filas.push(fila);
   }
   /* semana en curso = semana del último día con colocaciones */
@@ -288,6 +321,39 @@ function diasDe(vals){
   return dias; /* 25 días hábiles */
 }
 
+/* Oficinas con jornada de 6 dias (incluyen domingo) */
+function esSeisDias(nombre){ return /CARIAMANGA|MALACATOS/i.test(nombre||""); }
+
+/* Dias laborables transcurridos y dias con al menos 1 colocacion */
+function cumplimientoDiario(vals, seisDias, ud){
+  if(ud<0 || !vals) return {trans:0, cumplidos:0};
+  var fw = Math.floor(ud/5), dc = (ud%5)+1;
+  var trans=0, cum=0;
+  for(var w=0; w<=fw && w<WEEKS.length; w++){
+    var det = WEEKS[w].det[0];
+    var nDias = (w<fw) ? 5 : dc;
+    for(var p=0;p<nDias;p++){ trans++; if((vals[det+p]||0)>0) cum++; }
+    if(seisDias && w<fw){ trans++; if((vals[det+5]||0)>0) cum++; }
+  }
+  return {trans:trans, cumplidos:cum};
+}
+
+/* Dias laborables del mes calendario hasta la fecha de corte, descontando feriados */
+function diasCalendario(fechaDate, feriados){
+  if(!fechaDate) return null;
+  var y=fechaDate.getUTCFullYear(), mo=fechaDate.getUTCMonth(), hasta=fechaDate.getUTCDate();
+  var lab=0, dom=0, fer=0;
+  for(var d=1; d<=hasta; d++){
+    var dt = new Date(Date.UTC(y,mo,d));
+    var dow = dt.getUTCDay();
+    var iso = dt.toISOString().slice(0,10);
+    if(feriados && feriados.indexOf(iso)>=0){ if(dow===0 || (dow>=1&&dow<=5)) fer++; continue; }
+    if(dow>=1 && dow<=5) lab++;
+    else if(dow===0) dom++;
+  }
+  return {lab:lab, dom:dom, fer:fer};
+}
+
 function extraer(f){
   var v=f.vals;
   return {
@@ -296,7 +362,7 @@ function extraer(f){
     logN:esNum(v[7])?v[7]:0,  pctN:esNum(v[8])?v[8]:0,
     logM:esNum(v[9])?v[9]:0,  pctM:esNum(v[10])?v[10]:0,
     prom:esNum(v[11])?v[11]:null,
-    dias:diasDe(v)
+    dias:diasDe(v), vals:v
   };
 }
 
@@ -322,7 +388,7 @@ function criticidad(x){
 }
 function chipCrit(x){ var cr=criticidad(x); return '<span class="chip '+cr[1]+'">'+cr[0]+'</span>'; }
 
-function computeConclusiones(model){
+function computeConclusiones(model, feriados){
   var A = model.filas.filter(function(f){ return f.tipo==="detail"; }).map(function(f){
     var x = extraer(f); x.nombre = f.c; return x;
   });
@@ -342,9 +408,20 @@ function computeConclusiones(model){
   A.forEach(function(x){ enriquecer(x, ultimo, restantes); });
   O.forEach(function(x){ enriquecer(x, ultimo, restantes); });
 
+  var cal = diasCalendario(model.fechaDate, feriados||[]);
+  function conCumpl(x, seis){
+    var r = cumplimientoDiario(x.vals, seis, ultimo);
+    var trans = cal ? (seis ? cal.lab+cal.dom : cal.lab) : r.trans;
+    x.diasTrans = trans; x.diasCumpl = Math.min(r.cumplidos, trans);
+    x.pctDias = trans>0 ? x.diasCumpl/trans : 0;
+  }
+  A.forEach(function(x){ conCumpl(x, esSeisDias(x.agencia)); });
+  O.forEach(function(x){ conCumpl(x, esSeisDias(x.nombre)); });
+
   function copia(arr){ return arr.slice(); }
   var c = {transcurridos:transcurridos, restantes:restantes, asesores:A, oficinas:O};
   c.esperado = transcurridos/25;
+  c.cal = cal;
   c.semana = transcurridos>0 ? Math.ceil(transcurridos/5) : 1;
 
   var grand = model.filas.filter(function(f){ return f.tipo==="grand"; }).pop()
@@ -371,6 +448,8 @@ function computeConclusiones(model){
   c.ofPromBajos   = O.filter(function(x){return x.logN>0 && x.prom!=null;}).sort(function(a,b){return a.prom-b.prom;}).slice(0,5);
   c.ofRachas      = copia(O).sort(function(a,b){return b.racha-a.racha;}).filter(function(x){return x.racha>=2;}).slice(0,8);
   c.ofSugerencias = O.filter(function(x){return x.brechaN>0;}).sort(function(a,b){return b.brechaM-a.brechaM;}).slice(0,8);
+  c.cumplAses = copia(A).sort(function(a,b){return a.pctDias-b.pctDias;});
+  c.cumplOf   = copia(O).sort(function(a,b){return a.pctDias-b.pctDias;});
   c.ofPromAltos = O.filter(function(x){return x.prom!=null && x.prom>4000;}).sort(function(a,b){return b.prom-a.prom;}).slice(0,8);
   return c;
 }
@@ -387,11 +466,58 @@ function tablaConc(cols, filas){
   return h+'</tbody></table>';
 }
 
+function colDias(p){ return p>=0.8 ? "#43A047" : (p>=0.5 ? "#E8A33D" : "#E1251B"); }
+function chipDias(p){ return p>=0.8 ? "cf-verde" : (p>=0.5 ? "cf-amar" : "cf-rojo"); }
+
+function resumenDias(lista, etiqueta, scroll, c){
+  var n = lista.length || 1;
+  var grupos = [
+    {t:"al día (\u2265 80%)",   c:"#43A047", items:lista.filter(function(x){return x.pctDias>=0.8;})},
+    {t:"en riesgo (50\u201380%)", c:"#E8A33D", items:lista.filter(function(x){return x.pctDias>=0.5 && x.pctDias<0.8;})},
+    {t:"crítico (&lt; 50%)",       c:"#E1251B", items:lista.filter(function(x){return x.pctDias<0.5;})}
+  ];
+  var barra = '<div class="dstack">';
+  var leyenda = [];
+  grupos.forEach(function(g){
+    if(!g.items.length) return;
+    var wpc = g.items.length/n*100;
+    barra += '<div class="dseg" style="width:'+wpc+'%;background:'+g.c+'" title="'+g.items.length+' '+etiqueta.toLowerCase()+'(s) '+g.t+'">'+(wpc>=9 ? Math.round(wpc)+'%' : '')+'</div>';
+    leyenda.push('<span class="sw" style="background:'+g.c+'"></span> '+g.items.length+' '+g.t);
+  });
+  barra += '</div><p class="dleyenda">'+leyenda.join(' &nbsp;&middot;&nbsp; ')+'</p>';
+
+  function filaDe(x){
+    var col = colDias(x.pctDias);
+    var nom = x.nombre + ' <small>'+(etiqueta==="Asesor" ? (x.agencia||'')+' \u2014 ' : '')+(x.zona||'')+'</small>';
+    return '<div class="dias-row">'
+      +'<span class="sw" style="background:'+col+'"></span>'
+      +'<span class="dnom">'+nom+'</span>'
+      +'<span class="dnum"><b>'+x.diasCumpl+'</b> / '+x.diasTrans+' días</span>'
+      +'<div class="dbar"><div class="dfill" style="width:'+Math.min(100, x.pctDias*100)+'%;background:'+col+'"></div></div>'
+      +'<span class="dpct chip '+chipDias(x.pctDias)+'">'+fmtPct(x.pctDias)+'</span>'
+      +'</div>';
+  }
+  /* secciones: primero lo crítico, luego en riesgo, al final lo que va al día */
+  var cuerpo = "";
+  [grupos[2], grupos[1], grupos[0]].forEach(function(g){
+    if(!g.items.length) return;
+    cuerpo += '<div class="dband" style="color:'+g.c+'">'+g.t+' &mdash; '+g.items.length+' '+(g.items.length===1 ? etiqueta.toLowerCase() : (etiqueta==="Asesor" ? "asesores" : "oficinas"))+'</div>';
+    cuerpo += g.items.map(filaDe).join("");
+  });
+
+  return '<div class="ccard wide"><h3>'+ico("cal")+' Días laborables con colocación (al menos 1 crédito en el día)</h3>'
+    +'<p>Cariamanga y Malacatos laboran 6 días a la semana (incluye domingo); el resto, 5 días.'
+    +((c && c.cal) ? ' Días L&ndash;V transcurridos del mes: <b>'+c.cal.lab+'</b> &middot; domingos: <b>'+c.cal.dom+'</b> &middot; feriados descontados: <b>'+c.cal.fer+'</b>.' : '')
+    +'</p>'
+    +barra
+    +(scroll ? '<div class="scrolly">'+cuerpo+'</div>' : cuerpo)+'</div>';
+}
+
 function nomCorto(x){ return x.nombre+' <small>('+(x.agencia||'')+')</small>'; }
 function chipPct(v){ return '<span class="chip '+claseCF("pct",v)+'">'+fmtPct(v)+'</span>'; }
 
 function cardsAsesores(c){
-  var h = '<div class="cgrid">';
+  var h = resumenDias(c.cumplAses, 'Asesor', true, c) + '<div class="cgrid">';
 
   h += '<div class="ccard"><h3>'+ico("down")+' Peores desempeños (cumplimiento Nº y monto)</h3>';
   h += tablaConc(['Asesor','Zona','Cump. Nº','Cump. Monto'], c.peores.map(function(x){
@@ -455,7 +581,7 @@ function cardsAsesores(c){
 }
 
 function cardsOficinas(c){
-  var h = '<div class="cgrid">';
+  var h = resumenDias(c.cumplOf, 'Oficina', false, c) + '<div class="cgrid">';
 
   h += '<div class="ccard"><h3>'+ico("rank")+' Ranking de cumplimiento por oficina (de menor a mayor)</h3>';
   h += tablaConc(['Oficina','Zona','Cump. Nº','Cump. Monto','Brecha créd.','Criticidad'], c.ofRanking.map(function(x){
@@ -618,6 +744,7 @@ if(typeof document!=="undefined"){
   var weekOpen = {1:false,2:false,3:false,4:false,5:false};
   var openGroups = {};
   var zonaSel = "";
+  var ofiSel = "";
   var modelo = null;
 
   /* --- compartir tarjetas como imagen --- */
@@ -699,19 +826,70 @@ if(typeof document!=="undefined"){
     reader.readAsArrayBuffer(file);
   }
 
+  function filtroModelo(){
+    if(!zonaSel && !ofiSel) return modelo;
+    return {
+      filas: modelo.filas.filter(function(f){
+        if(zonaSel && f.zona!==zonaSel) return false;
+        if(ofiSel && f.agencia!==ofiSel) return false;
+        return true;
+      }),
+      semanaActual: modelo.semanaActual, ultimoDia: modelo.ultimoDia, zonas: modelo.zonas,
+      fechaDate: modelo.fechaDate, fecha: modelo.fecha
+    };
+  }
+
+  /* --- calendario de feriados --- */
+  var MESES = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+  function mesClave(){ var d = modelo && modelo.fechaDate; return d ? d.getUTCFullYear()+"-"+String(d.getUTCMonth()+1).padStart(2,"0") : null; }
+  function getFeriados(){ var k=mesClave(); if(!k) return []; try{ return JSON.parse(localStorage.getItem("faces_feriados_"+k)||"[]"); }catch(e){ return []; } }
+  function setFeriados(a){ var k=mesClave(); if(!k) return; try{ localStorage.setItem("faces_feriados_"+k, JSON.stringify(a)); }catch(e){} }
+  function pintarCalendario(){
+    var box = document.getElementById("calBox");
+    var d = modelo && modelo.fechaDate;
+    if(!box || !d) return;
+    var y=d.getUTCFullYear(), mo=d.getUTCMonth();
+    var fers = getFeriados();
+    var nDias = new Date(Date.UTC(y, mo+1, 0)).getUTCDate();
+    var off = (new Date(Date.UTC(y,mo,1)).getUTCDay()+6)%7;
+    var h = '<h3>Feriados de '+MESES[mo]+' '+y+'</h3>'
+      +'<p>Haz clic en los días feriados para marcarlos o desmarcarlos. Se descuentan de los días laborables del mes.</p>';
+    h += '<div class="calgrid">';
+    ["L","M","Mi","J","V","S","D"].forEach(function(x){ h+='<div class="calhdr">'+x+'</div>'; });
+    for(var i=0;i<off;i++) h+='<div></div>';
+    for(var day=1; day<=nDias; day++){
+      var iso = y+"-"+String(mo+1).padStart(2,"0")+"-"+String(day).padStart(2,"0");
+      var esFer = fers.indexOf(iso)>=0;
+      var pasado = day<=d.getUTCDate();
+      h += '<div class="calday'+(esFer?' fer':'')+(pasado?'':' fut')+'" data-iso="'+iso+'">'+day+'</div>';
+    }
+    h += '</div><div style="text-align:right;margin-top:10px"><button class="cbtn" id="calCerrar" style="padding:6px 14px">Cerrar</button></div>';
+    box.innerHTML = h;
+    box.querySelectorAll(".calday").forEach(function(el){
+      el.addEventListener("click", function(){
+        var iso = el.getAttribute("data-iso");
+        var fers2 = getFeriados();
+        var i2 = fers2.indexOf(iso);
+        if(i2>=0) fers2.splice(i2,1); else fers2.push(iso);
+        setFeriados(fers2);
+        pintarCalendario();
+        document.getElementById("conclusiones").dataset.done="";
+        pintar();
+      });
+    });
+    document.getElementById("calCerrar").addEventListener("click", function(){
+      document.getElementById("calOverlay").style.display="none";
+    });
+  }
+
   function pintar(){
     var conc = document.getElementById("conclusiones");
     if(conc && !conc.dataset.done){
-      var mf = modelo;
-      if(zonaSel){
-        mf = {filas: modelo.filas.filter(function(f){ return f.zona===zonaSel; }),
-              semanaActual: modelo.semanaActual, ultimoDia: modelo.ultimoDia};
-      }
-      conc.innerHTML = renderConclusiones(computeConclusiones(mf));
+      conc.innerHTML = renderConclusiones(computeConclusiones(filtroModelo(), getFeriados()));
       conc.dataset.done = "1";
       agregarBotones(conc);
     }
-    report.innerHTML = renderTable(modelo, weekOpen, zonaSel);
+    report.innerHTML = renderTable(filtroModelo(), weekOpen);
     var tbl = document.getElementById("tbl");
     for(var w=1;w<=5;w++) tbl.classList.toggle("wk"+w+"-open", !!weekOpen[w]);
     drop.style.display = "none";
@@ -723,14 +901,32 @@ if(typeof document!=="undefined"){
     fl.textContent = modelo.footer||"";
     fl.style.display = "block";
 
-    /* selector de zonas */
+    /* selectores de zona y oficina */
     var sel = document.getElementById("selZona");
+    var selO = document.getElementById("selOficina");
+    function llenarOficinas(){
+      if(!selO) return;
+      var ofs = [];
+      modelo.filas.forEach(function(f){
+        if(f.tipo==="detail" && f.agencia && (!zonaSel || f.zona===zonaSel) && ofs.indexOf(f.agencia)<0) ofs.push(f.agencia);
+      });
+      selO.innerHTML = '<option value="">Todas las oficinas</option>' +
+        ofs.map(function(o){ return '<option value="'+o+'">'+o+'</option>'; }).join("");
+      selO.value = (ofiSel && ofs.indexOf(ofiSel)>=0) ? ofiSel : "";
+      if(selO.value==="") ofiSel = "";
+    }
     if(sel && !sel.dataset.filled){
       sel.innerHTML = '<option value="">Todas las zonas</option>' +
         modelo.zonas.map(function(z){ return '<option value="'+z+'">'+z+'</option>'; }).join("");
       sel.dataset.filled = "1";
+      llenarOficinas();
       sel.addEventListener("change", function(){
-        zonaSel = sel.value;
+        zonaSel = sel.value; ofiSel = ""; llenarOficinas();
+        document.getElementById("conclusiones").dataset.done = "";
+        pintar();
+      });
+      selO.addEventListener("change", function(){
+        ofiSel = selO.value;
         document.getElementById("conclusiones").dataset.done = "";
         pintar();
       });
@@ -793,6 +989,14 @@ if(typeof document!=="undefined"){
   document.getElementById("btnCollapseRows").addEventListener("click", function(){ setAllRows(false); });
   document.getElementById("btnExpandWeeks").addEventListener("click", function(){ setAllWeeks(true); });
   document.getElementById("btnCollapseWeeks").addEventListener("click", function(){ setAllWeeks(false); });
+  document.getElementById("btnFeriados").addEventListener("click", function(){
+    if(!modelo) return;
+    pintarCalendario();
+    document.getElementById("calOverlay").style.display="flex";
+  });
+  document.getElementById("calOverlay").addEventListener("click", function(e){
+    if(e.target===this) this.style.display="none";
+  });
   document.getElementById("btnPrint").addEventListener("click", function(){ window.print(); });
   document.getElementById("btnConc").addEventListener("click", function(){
     var conc = document.getElementById("conclusiones");
@@ -808,7 +1012,9 @@ if(typeof document!=="undefined"){
     document.getElementById("btnConc").textContent="Ver conclusiones";
     var sel = document.getElementById("selZona");
     if(sel){ sel.innerHTML=""; sel.dataset.filled=""; }
-    zonaSel = "";
+    var selO = document.getElementById("selOficina");
+    if(selO){ selO.innerHTML=""; }
+    zonaSel = ""; ofiSel = "";
     drop.style.display="block"; input.value="";
   });
 }
@@ -818,5 +1024,4 @@ if(typeof module!=="undefined" && module.exports){
   module.exports = {buildModel:buildModel, renderTable:renderTable, claseCF:claseCF,
                     computeConclusiones:computeConclusiones, renderConclusiones:renderConclusiones};
 }
-})();
-</script></body></html>
+})();</script></body></html>
